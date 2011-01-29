@@ -39,10 +39,9 @@ class DataStore:
             web.config.debug = False
             base_name = 'test_'
         else:
-            base_name = ''
+            base_name = 'test_'
         self.databases = self.connect_to_databases(config, base_name)
         
-
     def connect_to_databases(self, config, base_name):
         databases = []
         for id in range(self.partitions):
@@ -79,11 +78,9 @@ class DataStore:
         if len(key) > self.key_length:
             raise web.badrequest() 
     
-    @retry_decorator
-    def is_key(self, key):
-        database = self.get_random_database()
+    def is_key(self, database, key):
         result = database.select(self.table_name, what='id', where='id = $key and update_flag<>2', limit=1, vars=locals())
-        self.index = 0      #TODO: Need to put this in an after-decorator
+#        self.index = 0      #TODO: Need to put this in an after-decorator
         for r in result:
             return r.id
             
@@ -105,6 +102,14 @@ class DataStore:
             return r.value
         raise web.notfound()
         
+    def get_canonical_value(self, key):
+        uuid = self.get_unique_identifier(key)
+        database = self.get_canonical_database(uuid)
+        result = database.select(self.table_name, what='value', where='id = $key and update_flag<>2', limit=1, vars=locals())
+        for r in result:    #TODO: remove loop and just get the first value
+            return r.value
+        raise web.notfound()
+        
     def set_value(self, key, value):
         self.check_key_length(key)
         uuid = self.get_unique_identifier(key)
@@ -113,7 +118,7 @@ class DataStore:
             database.delete(self.table_name, where='id = $key', vars=locals())
             return database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
                                             updated_at=web.SQLLiteral('NOW()'))
-#            if self.is_key(key):
+#            if self.is_key(database, key):
 #                return database.update(self.table_name, where='id = $key', id=key, value=value, uuid=uuid,
 #                                            update_flag= 1, updated_at=web.SQLLiteral('NOW()'), vars=locals())
 #            else:
@@ -126,7 +131,7 @@ class DataStore:
         self.check_key_length(key)
         uuid = self.get_unique_identifier(key)
         database = self.get_canonical_database(uuid)
-        if not self.is_key(key):
+        if not self.is_key(database, key):
             raise web.notfound()
         try:
             database.update(self.table_name, where='id = $key', update_flag= 2, 

@@ -29,13 +29,13 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )
-    def GET(self, name):
+    def GET(self, key):
         """Get the value if key is provided, otherwise return list of keys
         """
-        if len(name) <= 0:            
+        if len(key) <= 0:            
             result = self.datastore.get_keys()                
         else:
-            result = self.datastore.get_value(str(name))
+            result = self.datastore.get_value(str(key))
         return {'message' : result}
 
     @mimerender(
@@ -45,11 +45,11 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )        
-    def PUT(self, name):
-        self.datastore.set_value(str(name), web.data())
+    def PUT(self, key):
+        self.datastore.set_value(str(key), web.data())
         web.created()
-        web.header('Location', '/bucket/{0}'.format(str(name)))
-        return {'message' : str(name)}
+        web.header('Location', '/bucket/{0}'.format(str(key)))
+        return {'message' : str(key)}
 
     @mimerender(
         default = 'html',
@@ -58,8 +58,8 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )        
-    def DELETE(self, name):
-        self.datastore.delete(str(name))
+    def DELETE(self, key):
+        self.datastore.delete(str(key))
         return {'message' : 'deleted'}
         
 if (not is_test()) and __name__ == "__main__":   
