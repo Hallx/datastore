@@ -34,8 +34,8 @@ class BucketController:
         """Get the value if key is provided, otherwise return list of keys
         """
         if len(key) <= 0:
-            if forceful:           #TODO: Implement this
-                #result = self.datastore.get_keys()
+            if forceful:
+                result = self.datastore.get_keys_from_all()
                 pass
             else:
                 result = self.datastore.get_keys()                                
@@ -55,7 +55,7 @@ class BucketController:
     )        
     def _PUT(self, key, forceful=False):
         if forceful:
-            self.datastore.set_value_to_all(str(key), web.data())
+            self.datastore.set_value_in_all(str(key), web.data())
         else:
             self.datastore.set_value(str(key), web.data())
         web.created()
@@ -71,7 +71,7 @@ class BucketController:
     )        
     def _DELETE(self, key, forceful=False):
         if forceful:
-            self.datastore.delete_to_all(str(key))
+            self.datastore.delete_in_all(str(key))
         else:
             self.datastore.delete(str(key))
         return {'message' : 'deleted'}

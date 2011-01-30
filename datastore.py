@@ -85,7 +85,7 @@ class DataStore:
             return r.id
             
     @retry_decorator
-    def get_keys(self):
+    def get_keys(self): #TODO: May be deprecate?
         database = self.get_random_database()
         keys = []
         for key in database.select(self.table_name, what='id', where='update_flag<>2'):
@@ -93,6 +93,13 @@ class DataStore:
         self.index = 0      #TODO: Need to put this in an after-decorator
         return keys
     
+    def get_keys_from_all(self):
+        keys = set()
+        for database in self.databases:
+            for key in database.select(self.table_name, what='id', where='update_flag<>2'):
+                keys.add(str(key.id))
+        return list(keys)
+        
     @retry_decorator
     def get_value(self, key):
         database = self.get_random_database()
@@ -127,13 +134,13 @@ class DataStore:
         except:
             raise web.internalerror()
     
-    def set_value_to_all(self, key, value):
+    def set_value_in_all(self, key, value):
         self.set_value(key, value)
         uuid = self.get_unique_identifier(key)
         try:
             for database in self.databases:
                 database.delete(self.table_name, where='id = $key', vars=locals())
-                database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
+                database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 0,
                                             updated_at=web.SQLLiteral('NOW()'))
         except:
                 raise web.internalerror()
@@ -152,7 +159,7 @@ class DataStore:
         except:
             raise web.internalerror()
 
-    def delete_to_all(self, key):
+    def delete_in_all(self, key):
         self.delete(key)
         try:
             for database in self.databases:
