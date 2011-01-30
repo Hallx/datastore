@@ -40,8 +40,8 @@ class TestPOST():
         url_225 = ''.join([controller, 'c225'])
         r = self.client.post(url_225, "testing post method:newly set key")
         assert_equal(r.status, 201)
+        r.mustcontain("c225")
         r2 = self.client.get(url_225)
-#        assert_equal(r.headers['location'], self.url_225)
         r2.mustcontain("testing post method:newly set key")
 
     def test_set_a_key_value_where_key_exists(self):

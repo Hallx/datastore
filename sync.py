@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import MySQLdb
+import ConfigParser
+
+class SyncMysql:
+    def __init__(self, test_env=0):
+        config = ConfigParser.SafeConfigParser()
+        config.read('configuration.cfg')
+        
+        self.table_name = config.get('store', 'table_name')
+        self.partitions = config.getint('store', 'partitions')       
+        
+        if test_env:
+#            self.commit = False
+            base_name = 'test_'
+        else:
+            base_name = 'test_'
+        self.databases, self.cursors = self.get_database_cursors(config, base_name)
+        
+    def get_database_cursors(self, config, base_name):
+        cursors = []
+        databases = []
+        for id in range(self.partitions):
+            section = 'partition-' + str(id)
+            database_name = ''.join([base_name, config.get(section, 'name')])                        
+            database = MySQLdb.connect(host=config.get(section, 'host'), 
+                                     user=config.get(section, 'user'), 
+                                     passwd=config.get(section, 'password'), 
+                                     db=database_name)
+            databases.append(database)
+            cursor = database.cursor()
+            cursors.append(cursor)
+        return databases, cursors
+    
+    def find_all_keys_with_delete_flag(self, cursor):
+        keys = []
+        cursor.execute("select id from data where update_flag=2")
+        for row in cursor.fetchall():
+            keys.append(row[0])
+        return keys
+    
+    def delete_in_all(self, keys):
+        for cursor in self.cursors:
+            for key in keys:
+                statement = 'DELETE FROM data WHERE id IN (%s)'
+                cursor.execute(statement, key)     
+#            else:
+#                statement = 'DELETE FROM data WHERE id IN (%s)' % ','.join('\'%s\'' for i in keys)
+#                statement = statement % keys
+#                cursor.execute(statement)
+    
+    def get_all_updated_data(self, cursor):
+        keys = []
+        cursor.execute("select * from data where update_flag=1")
+        data = cursor.fetchall()
+        for row in data:
+            keys.append(row[0])
+        return keys, data
+    
+    def update_data_in_all(self, keys, data):
+        for cursor in self.cursors:
+            print data
+            for row in data:
+#                row, = data
+                statement = "REPLACE INTO data VALUES %s" % '(%s, %s, %s, %s, %s)'
+                cursor.execute(statement, row)
+            for key in keys:
+                statement = "UPDATE data SET update_flag=0 WHERE id IN (%s)"
+                cursor.execute(statement, key)
+#            else:
+#                statement = "REPLACE INTO data VALUES %s" % ','.join('(%s, %s, %s, %s, %s)' for i in data)
+#                cursor.execute(statement, data)
+#                statement = "UPDATE data SET update_flag=0 WHERE id IN (%s)" % ','.join('%s' for i in keys)
+#                cursor.execute(statement, keys)
+        
+    def run(self):
+#        try:
+            for cursor in self.cursors:
+                keys = self.find_all_keys_with_delete_flag(cursor)
+                self.delete_in_all(keys)
+                
+                keys, data = self.get_all_updated_data(cursor)
+                self.update_data_in_all(keys, data)
+#        except MySQLdb.Error, e:
+#             print "Error %d: %s" % (e.args[0], e.args[1])
+#             sys.exit (1)
+
+    def cleanup(self):
+#        try:
+            for cursor in self.cursors:
+                cursor.close()
+            for database in self.databases:
+                database.close()  
+#        except MySQLdb.Error, e:
+#             print "Error %d: %s" % (e.args[0], e.args[1])
+#             sys.exit (1)
+
+
+if __name__ == "__main__":
+    sync = SyncMysql()
+    sync.run() 
+    sync.cleanup()

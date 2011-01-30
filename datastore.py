@@ -5,6 +5,7 @@ import uuid
 import random
 from MySQLdb import OperationalError
 
+
 def retry_decorator(fn):
         """Decorator for methods that needs to be retried with different 
         back-end servers if the original one goes away
@@ -39,7 +40,7 @@ class DataStore:
             web.config.debug = False
             base_name = 'test_'
         else:
-            base_name = 'test_'
+            base_name = ''
         self.databases = self.connect_to_databases(config, base_name)
         
     def connect_to_databases(self, config, base_name):
@@ -79,7 +80,8 @@ class DataStore:
             raise web.badrequest() 
     
     def is_key(self, database, key):
-        result = database.select(self.table_name, what='id', where='id = $key and update_flag<>2', limit=1, vars=locals())
+        result = database.select(self.table_name, what='id', 
+                                 where='id = $key and update_flag<>2', limit=1, vars=locals())
         for r in result:
             return r.id
             
@@ -88,8 +90,9 @@ class DataStore:
         database = self.get_random_database()
         keys = []
         for key in database.select(self.table_name, what='id', where='update_flag<>2'):
-            keys.append(str(key.id))
-        self.index = 0      #TODO: Need to put this in an after-decorator
+            keys.append(str(key.id))    
+        #TODO: Need to put this in an after-decorator
+        self.index = 0      
         return keys
     
     def get_keys_from_all(self):
@@ -102,17 +105,21 @@ class DataStore:
     @retry_decorator
     def get_value(self, key):
         database = self.get_random_database()
-        result = database.select(self.table_name, what='value', where='id = $key and update_flag<>2', limit=1, vars=locals())    
-        self.index = 0      #TODO: Need to put this in an after-decorator            
-        for r in result:    #TODO: remove loop and just get the first value
+        result = database.select(self.table_name, what='value', 
+                                 where='id = $key and update_flag<>2', limit=1, vars=locals())    
+        #TODO: Need to put this in an after-decorator
+        self.index = 0
+        #TODO: remove loop and just get the first value                
+        for r in result:
             return r.value
         raise web.notfound()
         
     def get_canonical_value(self, key):
         uuid = self.get_unique_identifier(key)
         database = self.get_canonical_database(uuid)
-        result = database.select(self.table_name, what='value', where='id = $key and update_flag<>2', limit=1, vars=locals())
-        for r in result:    #TODO: remove loop and just get the first value
+        result = database.select(self.table_name, what='value', 
+                                 where='id = $key and update_flag<>2', limit=1, vars=locals())
+        for r in result:    
             return r.value
         raise web.notfound()
         
@@ -123,13 +130,7 @@ class DataStore:
         try:
             database.delete(self.table_name, where='id = $key', vars=locals())
             return database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
-                                            updated_at=web.SQLLiteral('NOW()'))
-#            if self.is_key(database, key):
-#                return database.update(self.table_name, where='id = $key', id=key, value=value, uuid=uuid,
-#                                            update_flag= 1, updated_at=web.SQLLiteral('NOW()'), vars=locals())
-#            else:
-#                return database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
-#                                            updated_at=web.SQLLiteral('NOW()'))            
+                                            updated_at=web.SQLLiteral('NOW()'))            
         except:
             raise web.internalerror()
     

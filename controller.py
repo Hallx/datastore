@@ -31,6 +31,7 @@ import json
 from datastore import DataStore
 from mimerender import mimerender
 
+
 render_xml = lambda message: '<message>%s</message>'%message
 render_json = lambda **args: json.dumps(args)
 render_html = lambda message: '<html><body>%s</body></html>'%message
@@ -40,7 +41,6 @@ urls = (
     '/bucket/(.*)', 'LazyBucketController',
     '/canonicalbucket/(.*)', 'CanonicalBucketController'
 )
-#base_url = ''.join([web.ctx.home, '/bucket/'])
 base_url = '/bucket/'
 def _url_formatter(x): 
     return ''.join([base_url, x])
