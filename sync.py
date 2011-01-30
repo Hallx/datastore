@@ -4,6 +4,7 @@ import os
 import sys
 import MySQLdb
 import ConfigParser
+import fcntl
 
 class SyncMysql:
     def __init__(self, test_env=0):
@@ -13,7 +14,7 @@ class SyncMysql:
         self.table_name = config.get('store', 'table_name')
         self.partitions = config.getint('store', 'partitions')       
         
-        if sys.argv[1] == "test":
+        if len(sys.argv) > 1 and sys.argv[1] == "test":
             base_name = 'test_'
         else:
             base_name = ""
@@ -44,14 +45,11 @@ class SyncMysql:
     
     def delete_in_all(self, keys):
         for cursor in self.cursors:
+            #Instead of loop. It can be much better if one delete statement takes care of it
             for key in keys:
                 print "deleting %s in %s" % (key, str(cursor))
                 statement = 'DELETE FROM data WHERE id IN (%s)'
-                cursor.execute(statement, key)     
-#            else:
-#                statement = 'DELETE FROM data WHERE id IN (%s)' % ','.join('\'%s\'' for i in keys)
-#                statement = statement % keys
-#                cursor.execute(statement)
+                cursor.execute(statement, key)
     
     def get_all_updated_data(self, cursor):
         keys = []
@@ -63,8 +61,8 @@ class SyncMysql:
     
     def update_data_in_all(self, keys, data):
         for cursor in self.cursors:
+            #Instead of loop. It can be much better if one update statement takes care of it
             for row in data:
-#                row, = data
                 print row
                 statement = "REPLACE INTO data VALUES %s" % '(%s, %s, %s, %s, %s)'
                 cursor.execute(statement, row)
@@ -72,36 +70,46 @@ class SyncMysql:
                 print key
                 statement = "UPDATE data SET update_flag=0 WHERE id IN (%s)"
                 cursor.execute(statement, key)
-#            else:
-#                statement = "REPLACE INTO data VALUES %s" % ','.join('(%s, %s, %s, %s, %s)' for i in data)
-#                cursor.execute(statement, data)
-#                statement = "UPDATE data SET update_flag=0 WHERE id IN (%s)" % ','.join('%s' for i in keys)
-#                cursor.execute(statement, keys)
         
     def run(self):
-#        try:
+        while True:
+            pass
+        try:
             for cursor in self.cursors:
                 keys = self.find_all_keys_with_delete_flag(cursor)
                 self.delete_in_all(keys)
                 
                 keys, data = self.get_all_updated_data(cursor)
                 self.update_data_in_all(keys, data)
-#        except MySQLdb.Error, e:
-#             print "Error %d: %s" % (e.args[0], e.args[1])
-#             sys.exit (1)
+        except MySQLdb.Error, e:
+             print "Error %d: %s" % (e.args[0], e.args[1])
+             sys.exit (1)
 
     def cleanup(self):
-#        try:
+        try:
             for cursor in self.cursors:
                 cursor.close()
             for database in self.databases:
                 database.close()  
-#        except MySQLdb.Error, e:
-#             print "Error %d: %s" % (e.args[0], e.args[1])
-#             sys.exit (1)
+        except MySQLdb.Error, e:
+             print "Error %d: %s" % (e.args[0], e.args[1])
+             sys.exit (1)
 
+def lock_file(lockfile):
+    """Make sure only one instance runs
+    """
+    fp = open(lockfile, 'w')
+    try:
+        fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError:
+        return False
+    return True
 
 if __name__ == "__main__":
+    if not lock_file(".lock.pid"):
+        print "An instance is already running."
+        sys.exit(0)
     sync = SyncMysql()
     sync.run() 
     sync.cleanup()
+            
