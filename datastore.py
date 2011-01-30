@@ -8,7 +8,7 @@ from MySQLdb import OperationalError
 
 def retry_decorator(fn):
         """Decorator for methods that needs to be retried with different 
-        back-end servers if the original one goes away
+        back-end servers if the original one goes away        
         """
         def new_function(*args):
             #TODO: get this value from config - partitions
@@ -27,6 +27,12 @@ def retry_decorator(fn):
 
 class DataStore:
     """DataStore handles the communication with nodes
+    
+    
+    Update flag has three values
+        0: The data row is all synced
+        1: The data row is updated and waiting to be synced
+        2: The data row is marked to be deleted
     """
     def __init__(self, test_env=0):
         config = ConfigParser.SafeConfigParser()
@@ -129,8 +135,9 @@ class DataStore:
         uuid = self.get_unique_identifier(key)
         database = self.get_canonical_database(uuid)
         try:
+            #Update flag = 1 depicts that value has been updated but not synced yet 
             database.delete(self.table_name, where='id = $key', vars=locals())
-            return database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
+            return database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag=1,
                                             updated_at=web.SQLLiteral('NOW()'))            
         except:
             raise web.internalerror()
@@ -141,7 +148,7 @@ class DataStore:
         try:
             for database in self.databases:
                 database.delete(self.table_name, where='id = $key', vars=locals())
-                database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 0,
+                database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag=0,
                                             updated_at=web.SQLLiteral('NOW()'))
         except:
                 raise web.internalerror()
@@ -154,6 +161,7 @@ class DataStore:
         if not self.is_key(database, key):
             raise web.notfound()
         try:
+            #Update flag = 2 depicts that value has been marked as delete but not synced yet
             database.update(self.table_name, where='id = $key', update_flag= 2, 
                             updated_at=web.SQLLiteral('NOW()'), vars=locals())
             return
@@ -164,6 +172,7 @@ class DataStore:
         self.delete(key)
         try:
             for database in self.databases:
+                #Update flag = 2 depicts that value has been marked as delete but not synced yet
                 database.update(self.table_name, where='id = $key', update_flag= 2, 
                             updated_at=web.SQLLiteral('NOW()'), vars=locals())
         except:

@@ -1,0 +1,82 @@
+
+SETUP:
+======
+
+1. Ubuntu/debian will need the following package installed. You can install them using apt-get:
+
+	Python 2.6
+	python-webpy (also: http://webpy.org/install) version 0.34
+	python-nose
+	python-paste
+	python-mysqldb
+
+2. Then get mimerender and mimeparser packages from:
+	http://mimerender.googlecode.com/files/mimerender-0.2.2.tar.gz
+	http://mimeparse.googlecode.com/files/mimeparse-0.1.3.tar.gz
+	
+3. extract them and install using:
+
+	$ python setup.py install
+
+4. Run the provided database definition script in project home directory with your mysql server:
+	
+	$ mysql database_definition.sql 
+	
+	give credentials where necessary.
+
+5. Go Through configuration file (configuation.cfg) and tweak the user name, passwords, other credentials
+	as you deem fit. The store can be configured to run on multiple mysql backends on different hosts. 
+	 	
+6. Make controller.py and sync.py executeable by running command:
+	$ chmod +x controller.py sync.py
+
+7. Pass all tests using:
+	$ WEBPY_ENV=test nosetests
+	
+8. Add sync.py to your crontab to run every few minutes
+	
+9. Now, you can run the web server by just running controller.py file from the commandline using:
+	$ ./controller.py
+
+
+STRUCTURE:
+==========
+
+-	This data store is divided between data layer and control layer (i.e Model and Controller part of MVC.
+
+	controller.py contains all the control layer and is responsible for fielding all the request and
+	returning well formed HTTP validated responses. 
+	
+	datastore.py has the data layer code. It is responsible for data manipulation. Storing and retrieving 
+	from the back end. 
+	
+	sync.py is syncronization script which handles the lazy synchronization of key value pair across 
+	all the nodes. It is supposed to run lazily on a frequency of choosing.
+	
+	 
+
+
+NOTES:
+======
+
+-	The current installation would be for testing purposes. However, you can easily configure it to use
+	some serious webserver. The instructions to use webpy in production with LightTPD and Apache can be
+	found at:
+	
+	http://webpy.org/install#prod
+
+-	The service is configured on two back end nodes. It is very easy to scale beyond that. Just change the
+	value of partitions in configuration file to desired number of nodes. Then add section for configuration
+	for particular node. The section should be named following conventions of python configuration file. For
+	example: partition-3, partition-4 and so on.
+	
+-	The front end is http webserver can also be scaled independant of the back end. However, sync.py should 
+	only have one instance to avoid race conditions.
+	
+-	The test folder contains test for two types of access. They are best documentation on how to use the service.
+	Tests in the files GET and SET key value pairs. As well as UPDATE, DELETE them. You can also list all the
+	keys in the data store. All the successs and error codes are HTTP compliant.
+	
+-	TEST mode requires all the database nodes to have 'test_' in the start of their name. So it is 
+	imperative that we have a database with name 'test_' available on the same configuration. This is important to
+	keep in mind if we want to change mysql node configuration.	 
