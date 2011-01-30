@@ -11,8 +11,8 @@ class TestGET():
         
         middleware = []
         self.client = TestApp(app.wsgifunc(*middleware))
-        self.client.put(self.url_1, 'test')
-        self.client.put(self.url_2, 'test')
+        self.client.post(self.url_1, 'test')
+        self.client.post(self.url_2, 'test')
 
     def test_get_with_no_key_should_return_all_keys(self):
         r = self.client.get(controller)
@@ -31,26 +31,26 @@ class TestGET():
         self.url_3 = ''.join([controller, 'c223'])
         self.client.get(self.url_3, status=404)
 
-class TestPUT():
+class TestPOST():
     def setUp(self):
         middleware = []
         self.client = TestApp(app.wsgifunc(*middleware))
 
     def test_set_a_key_value(self):
         url_225 = ''.join([controller, 'c225'])
-        r = self.client.put(url_225, "testing put method:newly set key")
+        r = self.client.post(url_225, "testing post method:newly set key")
         assert_equal(r.status, 201)
         r2 = self.client.get(url_225)
 #        assert_equal(r.headers['location'], self.url_225)
-        r2.mustcontain("testing put method:newly set key")
+        r2.mustcontain("testing post method:newly set key")
 
     def test_set_a_key_value_where_key_exists(self):
         url_335 = ''.join([controller, 'c335'])
-        self.client.put(url_335, "value exists. should have been overwritten.")
+        self.client.post(url_335, "value exists. should have been overwritten.")
         r2 = self.client.get(url_335)
         r2.mustcontain("value exists. should have been overwritten.")
         
-        r3 = self.client.put(url_335, "overwritten the existing value")
+        r3 = self.client.post(url_335, "overwritten the existing value")
         assert_equal(r3.status, 201)
         r4 = self.client.get(url_335)
         r4.mustcontain("overwritten the existing value")
@@ -60,7 +60,7 @@ class TestPUT():
         """
         key = "".join(map(str, range(40)))
         url_too_long_key = ''.join([controller, key])
-        self.client.put(url_too_long_key, "very very long. longer key than in database. should not get inserted", status=400)
+        self.client.post(url_too_long_key, "very very long. longer key than in database. should not get inserted", status=400)
         self.client.get(url_too_long_key, status=404)
         
 class TestDELETE():
@@ -70,7 +70,7 @@ class TestDELETE():
 
     def test_delete_a_key_value(self):
         url_995 = ''.join([controller, 'c995'])        
-        self.client.put(url_995, "should have a deleted flag")
+        self.client.post(url_995, "should have a deleted flag")
         self.client.delete(url_995)
         self.client.get(url_995, status=404)
         
@@ -80,9 +80,9 @@ class TestDELETE():
                 
     def test_delete_and_immediately_insert_a_key_value(self):
         url_885 = ''.join([controller, 'c885'])
-        self.client.put(url_885, "will be deleted and over written")
+        self.client.post(url_885, "will be deleted and over written")
         self.client.delete(url_885)
         
-        self.client.put(url_885, "deleted existing. and written a new value")
+        self.client.post(url_885, "deleted existing. and written a new value")
         r2 = self.client.get(url_885)
         r2.mustcontain("deleted existing. and written a new value")

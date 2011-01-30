@@ -16,8 +16,8 @@ class TestGET():
         canonical_url_1 = ''.join([canonical_controller, 'l221'])
         canonical_url_2 = ''.join([canonical_controller, 'l222'])
         
-        self.client.put(canonical_url_1, 'test')   #Propagated to all nodes
-        self.client.put(canonical_url_2, 'test')   #Propagated to all nodes
+        self.client.post(canonical_url_1, 'test')   #Propagated to all nodes
+        self.client.post(canonical_url_2, 'test')   #Propagated to all nodes
 
     def test_get_with_no_key_should_return_all_keys_present_in_any_node(self):
         r = self.client.get(lazy_controller)
@@ -35,27 +35,27 @@ class TestGET():
         """
         self.client.get(self.lazy_url_3, status=404)
 
-class TestPUT():
+class TestPOST():
     def setUp(self):
         middleware = []
         self.client = TestApp(app.wsgifunc(*middleware))
 
     def test_set_a_key_value(self):
-        lazy_put_url = ''.join([lazy_controller, 'l555'])
+        lazy_post_url = ''.join([lazy_controller, 'l555'])
         canonical_get_url = ''.join([canonical_controller, 'l555'])
         
-        r = self.client.put(lazy_put_url, "testing put method: newly created value")
+        r = self.client.post(lazy_post_url, "testing post method: newly created value")
         assert_equal(r.status, 201)
         r2 = self.client.get(canonical_get_url)
-        r2.mustcontain("testing put method: newly created value")
+        r2.mustcontain("testing post method: newly created value")
 
     def test_set_a_key_value_where_key_exists(self):        
-        lazy_put_url = ''.join([lazy_controller, 'l655'])
+        lazy_post_url = ''.join([lazy_controller, 'l655'])
         canonical_url = ''.join([canonical_controller, 'l655'])
-        self.client.put(canonical_url, "value exists. over written on canonical. Can be visible in others")
+        self.client.post(canonical_url, "value exists. over written on canonical. Can be visible in others")
         r2 = self.client.get(canonical_url)
         
-        r3 = self.client.put(lazy_put_url, "overwritten the existing value")
+        r3 = self.client.post(lazy_post_url, "overwritten the existing value")
         assert_equal(r3.status, 201)
         r4 = self.client.get(canonical_url)
         r4.mustcontain("overwritten the existing value")
@@ -65,7 +65,7 @@ class TestPUT():
         """
         key = "".join(map(str, range(40)))
         url_too_long_key = ''.join([lazy_controller, key])
-        self.client.put(url_too_long_key, "very very long. longer key than in database. should not get inserted", status=400)
+        self.client.post(url_too_long_key, "very very long. longer key than in database. should not get inserted", status=400)
         self.client.get(url_too_long_key, status=404)
         
 class TestDELETE():
@@ -76,7 +76,7 @@ class TestDELETE():
     def test_delete_a_key_value(self):
         lazy_url = ''.join([lazy_controller, 'l777'])
         canonical_url = ''.join([canonical_controller, 'l777'])
-        self.client.put(canonical_url, "should have a deleted flag")
+        self.client.post(canonical_url, "should have a deleted flag")
         
         self.client.delete(lazy_url)
         self.client.get(canonical_url, status=404)
@@ -88,9 +88,9 @@ class TestDELETE():
     def test_delete_existing_and_immediately_insert_a_key_value(self):
         lazy_url = ''.join([lazy_controller, 'l737'])
         canonical_url = ''.join([canonical_controller, 'l737'])        
-        self.client.put(canonical_url, "will be deleted and over written on canonical. Can be visible in others.")
+        self.client.post(canonical_url, "will be deleted and over written on canonical. Can be visible in others.")
         
         self.client.delete(lazy_url)
-        self.client.put(lazy_url, "deleted existing. and written a new value")
+        self.client.post(lazy_url, "deleted existing. and written a new value")
         r2 = self.client.get(canonical_url)
         r2.mustcontain("deleted existing. and written a new value")

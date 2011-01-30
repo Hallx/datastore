@@ -36,7 +36,6 @@ class BucketController:
         if len(key) <= 0:
             if forceful:
                 result = self.datastore.get_keys_from_all()
-                pass
             else:
                 result = self.datastore.get_keys()                                
         else:
@@ -53,7 +52,7 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )        
-    def _PUT(self, key, forceful=False):
+    def _POST(self, key, forceful=False):
         if forceful:
             self.datastore.set_value_in_all(str(key), web.data())
         else:
@@ -84,8 +83,8 @@ class LazyBucketController(BucketController):
     def GET(self, key):
         return self._GET(key)
     
-    def PUT(self, key):
-        return self._PUT(key)
+    def POST(self, key):
+        return self._POST(key)
     
     def DELETE(self, key):
         return self._DELETE(key)
@@ -97,8 +96,8 @@ class CanonicalBucketController(BucketController):
     def GET(self, key):
         return self._GET(key, forceful = True)
     
-    def PUT(self, key):
-        return self._PUT(key, forceful = True)
+    def POST(self, key):
+        return self._POST(key, forceful = True)
     
     def DELETE(self, key):
         return self._DELETE(key, forceful = True)    
