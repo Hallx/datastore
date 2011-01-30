@@ -78,7 +78,7 @@ class TestDELETE():
 
     def test_delete_a_key_value(self):
         lazy_url = ''.join([lazy_controller, 'l777'])
-        canonical_url = ''.join([lazy_controller, 'l777'])
+        canonical_url = ''.join([canonical_controller, 'l777'])
         self.client.put(canonical_url, "should have a deleted flag")
         
         self.client.delete(lazy_url)
@@ -90,7 +90,7 @@ class TestDELETE():
                 
     def test_delete_existing_and_immediately_insert_a_key_value(self):
         lazy_url = ''.join([lazy_controller, 'l737'])
-        canonical_url = ''.join([lazy_controller, 'l737'])        
+        canonical_url = ''.join([canonical_controller, 'l737'])        
         self.client.put(canonical_url, "will be deleted and over written on canonical. Can be visible in others.")
         
         self.client.delete(lazy_url)
