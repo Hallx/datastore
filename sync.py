@@ -13,11 +13,10 @@ class SyncMysql:
         self.table_name = config.get('store', 'table_name')
         self.partitions = config.getint('store', 'partitions')       
         
-        if test_env:
-#            self.commit = False
+        if sys.argv[1] == "test":
             base_name = 'test_'
         else:
-            base_name = 'test_'
+            base_name = ""
         self.databases, self.cursors = self.get_database_cursors(config, base_name)
         
     def get_database_cursors(self, config, base_name):
@@ -30,6 +29,7 @@ class SyncMysql:
                                      user=config.get(section, 'user'), 
                                      passwd=config.get(section, 'password'), 
                                      db=database_name)
+            database.autocommit(True)
             databases.append(database)
             cursor = database.cursor()
             cursors.append(cursor)
@@ -45,6 +45,7 @@ class SyncMysql:
     def delete_in_all(self, keys):
         for cursor in self.cursors:
             for key in keys:
+                print "deleting %s in %s" % (key, str(cursor))
                 statement = 'DELETE FROM data WHERE id IN (%s)'
                 cursor.execute(statement, key)     
 #            else:
@@ -62,12 +63,13 @@ class SyncMysql:
     
     def update_data_in_all(self, keys, data):
         for cursor in self.cursors:
-            print data
             for row in data:
 #                row, = data
+                print row
                 statement = "REPLACE INTO data VALUES %s" % '(%s, %s, %s, %s, %s)'
                 cursor.execute(statement, row)
             for key in keys:
+                print key
                 statement = "UPDATE data SET update_flag=0 WHERE id IN (%s)"
                 cursor.execute(statement, key)
 #            else:
