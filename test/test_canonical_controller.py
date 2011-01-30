@@ -71,7 +71,7 @@ class TestDELETE():
     def test_delete_a_key_value(self):
         url_995 = ''.join([controller, 'c995'])        
         self.client.post(url_995, "should have a deleted flag")
-        self.client.delete(url_995)
+        self.client.delete(url_995, status=202)
         self.client.get(url_995, status=404)
         
     def test_cannot_delete_a_non_existing_key_value(self):
@@ -81,7 +81,7 @@ class TestDELETE():
     def test_delete_and_immediately_insert_a_key_value(self):
         url_885 = ''.join([controller, 'c885'])
         self.client.post(url_885, "will be deleted and over written")
-        self.client.delete(url_885)
+        self.client.delete(url_885, status=202)
         
         self.client.post(url_885, "deleted existing. and written a new value")
         r2 = self.client.get(url_885)

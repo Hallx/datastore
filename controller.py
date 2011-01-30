@@ -40,6 +40,11 @@ urls = (
     '/bucket/(.*)', 'LazyBucketController',
     '/canonicalbucket/(.*)', 'CanonicalBucketController'
 )
+#base_url = ''.join([web.ctx.home, '/bucket/'])
+base_url = '/bucket/'
+def _url_formatter(x): 
+    return ''.join([base_url, x])
+    
 app = web.application(urls, globals())
 
 def is_test():
@@ -50,6 +55,7 @@ class BucketController:
     """Bucket controller processes HTTP verbs
     """
     datastore = DataStore(test_env=is_test())
+
     @mimerender(
         default = 'html',
         html = render_html,
@@ -62,9 +68,10 @@ class BucketController:
         """
         if len(key) <= 0:
             if forceful:
-                result = self.datastore.get_keys_from_all()
+                keys = self.datastore.get_keys_from_all()
             else:
-                result = self.datastore.get_keys()                                
+                keys = self.datastore.get_keys()
+            result = map(_url_formatter, keys)               
         else:
             if forceful:
                 result = self.datastore.get_canonical_value(str(key))
@@ -85,8 +92,9 @@ class BucketController:
         else:
             self.datastore.set_value(str(key), web.data())
         web.created()
-        web.header('Location', '/bucket/{0}'.format(str(key)))
-        return {'message' : str(key)}
+        location = "".join([web.ctx.home, _url_formatter(str(key))]) 
+        web.header('Location', location)
+        return {'message' : location}
 
     @mimerender(
         default = 'html',
@@ -100,12 +108,19 @@ class BucketController:
             self.datastore.delete_in_all(str(key))
         else:
             self.datastore.delete(str(key))
-        return {'message' : 'deleted'}
+        web.accepted()
+        return {'message' : 'accepted'}
     
 class LazyBucketController(BucketController):
-    """Does not try to get precise read or propagate the writes
-    a read can be done on any node. can be slightly stale
-    a write to canonical node will propagated lazily
+    """Lazy controller is going to return value from a random node
+    while will write only on single node. Does not try to get precise
+    read or propagate the writes.
+    
+    A GET request will be completed on a random node. The value 
+    can be slightly stale.
+    
+    A POST and DELETE will be completed on canonical (responsible)
+    node. It will sync lazily to other nodes.
     """
     def GET(self, key):
         return self._GET(key)
@@ -117,8 +132,15 @@ class LazyBucketController(BucketController):
         return self._DELETE(key)
         
 class CanonicalBucketController(BucketController):
-    """Every write is propagated to all nodes
-    Every read is read from canonical node
+    """Canonical controller returns value from the responsible node
+    while will write to all nodes. It will return live values on
+    read or propagates all values that it writes.
+    
+    A GET request will be completed on the canonical (responsible) 
+    nodes. 
+    
+    A POST and DELETE will be completed on all nodes. Hence, resulting
+    in immediate sync on all nodes.
     """
     def GET(self, key):
         return self._GET(key, forceful = True)

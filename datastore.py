@@ -24,7 +24,7 @@ def retry_decorator(fn):
         return new_function
 
 class DataStore:
-    """DataStore handles the database communication
+    """DataStore handles the communication with nodes
     """
     def __init__(self, test_env=0):
         config = ConfigParser.SafeConfigParser()
@@ -55,15 +55,15 @@ class DataStore:
         return databases
 
     def get_canonical_database(self, uuid):
-        """Get the canonical database handler for this uuid 
+        """Get the canonical database handler for the uuid 
         """
         index = int(int(uuid, 16) % self.partitions)
         return self.databases[index]
     
     def get_random_database(self):
-        """Get a random database handler on first invocation
-        subsequent calling of the method goes through next database handler
-        raises internal error on exhaustion 
+        """Get a random database handler on the first invocation.
+        Subsequent calling of the method returns next database handler.
+        Raises internal error on exhaustion of handlers. 
         """
         if not self.index:
             self.index = random.randint(0, self.partitions-1)
@@ -80,12 +80,11 @@ class DataStore:
     
     def is_key(self, database, key):
         result = database.select(self.table_name, what='id', where='id = $key and update_flag<>2', limit=1, vars=locals())
-#        self.index = 0      #TODO: Need to put this in an after-decorator
         for r in result:
             return r.id
             
     @retry_decorator
-    def get_keys(self): #TODO: May be deprecate?
+    def get_keys(self):
         database = self.get_random_database()
         keys = []
         for key in database.select(self.table_name, what='id', where='update_flag<>2'):

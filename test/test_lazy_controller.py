@@ -78,7 +78,7 @@ class TestDELETE():
         canonical_url = ''.join([canonical_controller, 'l777'])
         self.client.post(canonical_url, "should have a deleted flag")
         
-        self.client.delete(lazy_url)
+        self.client.delete(lazy_url, status=202)
         self.client.get(canonical_url, status=404)
         
     def test_cannot_delete_a_non_existing_key_value(self):
@@ -90,7 +90,7 @@ class TestDELETE():
         canonical_url = ''.join([canonical_controller, 'l737'])        
         self.client.post(canonical_url, "will be deleted and over written on canonical. Can be visible in others.")
         
-        self.client.delete(lazy_url)
+        self.client.delete(lazy_url, status=202)
         self.client.post(lazy_url, "deleted existing. and written a new value")
         r2 = self.client.get(canonical_url)
         r2.mustcontain("deleted existing. and written a new value")
