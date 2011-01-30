@@ -2,8 +2,6 @@ from paste.fixture import TestApp
 from nose.tools import *
 from controller import app
 
-
-
 class TestGET():
     def setUp(self):
         controller = '/canonicalbucket/'
