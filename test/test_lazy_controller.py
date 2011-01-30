@@ -15,12 +15,11 @@ class TestGET():
         self.lazy_url_2 = ''.join([lazy_controller, 'l222'])
         self.lazy_url_3 = ''.join([lazy_controller, 'l223'])
         
-        self.canonical_url_1 = ''.join([canonical_controller, 'l221'])
-        self.canonical_url_2 = ''.join([canonical_controller, 'l222'])
-        self.canonical_url_3 = ''.join([canonical_controller, 'l223'])
+        canonical_url_1 = ''.join([canonical_controller, 'l221'])
+        canonical_url_2 = ''.join([canonical_controller, 'l222'])
         
-        self.client.put(self.canonical_url_1, 'test')   #Propagated to all nodes
-        self.client.put(self.canonical_url_2, 'test')   #Propagated to all nodes
+        self.client.put(canonical_url_1, 'test')   #Propagated to all nodes
+        self.client.put(canonical_url_2, 'test')   #Propagated to all nodes
 
     def test_get_with_no_key_should_return_all_keys_present_in_any_node(self):
         r = self.client.get(lazy_controller)
@@ -55,7 +54,7 @@ class TestPUT():
     def test_set_a_key_value_where_key_exists(self):        
         lazy_put_url = ''.join([lazy_controller, 'l655'])
         canonical_url = ''.join([canonical_controller, 'l655'])
-        self.client.put(canonical_url, "value exists. should have been overwritten.")
+        self.client.put(canonical_url, "value exists. over written on canonical. Can be visible in others")
         r2 = self.client.get(canonical_url)
         
         r3 = self.client.put(lazy_put_url, "overwritten the existing value")
