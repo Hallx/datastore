@@ -11,7 +11,8 @@ def retry_decorator(fn):
         back-end servers if the original one goes away
         """
         def new_function(*args):
-            tries = 5 #TODO: get this value from config - partitions
+            #TODO: get this value from config - partitions
+            tries = 5
             while True:
                 try:
                     if tries <= 0:

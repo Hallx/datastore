@@ -72,8 +72,6 @@ class SyncMysql:
                 cursor.execute(statement, key)
         
     def run(self):
-        while True:
-            pass
         try:
             for cursor in self.cursors:
                 keys = self.find_all_keys_with_delete_flag(cursor)
@@ -95,20 +93,8 @@ class SyncMysql:
              print "Error %d: %s" % (e.args[0], e.args[1])
              sys.exit (1)
 
-def lock_file(lockfile):
-    """Make sure only one instance runs
-    """
-    fp = open(lockfile, 'w')
-    try:
-        fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except IOError:
-        return False
-    return True
 
 if __name__ == "__main__":
-    if not lock_file(".lock.pid"):
-        print "An instance is already running."
-        sys.exit(0)
     sync = SyncMysql()
     sync.run() 
     sync.cleanup()
