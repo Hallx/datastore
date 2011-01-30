@@ -11,10 +11,8 @@ class TestGET():
         middleware = []
         self.client = TestApp(app.wsgifunc(*middleware))
 
-        self.lazy_url_1 = ''.join([lazy_controller, 'l221'])
         self.lazy_url_2 = ''.join([lazy_controller, 'l222'])
-        self.lazy_url_3 = ''.join([lazy_controller, 'l223'])
-        
+        self.lazy_url_3 = ''.join([lazy_controller, 'l223'])     
         canonical_url_1 = ''.join([canonical_controller, 'l221'])
         canonical_url_2 = ''.join([canonical_controller, 'l222'])
         
