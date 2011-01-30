@@ -1,3 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""A distributed RESTful key value store.
+
+All operations occur with the HTTP primitives (GET, POST, PUT, DELETE).
+
+Values can be uploaded either via POST. POST requires a key and data.
+For example, sending a POST to URI (http://#{SERVER}/bucket/#{KEY}) with a 
+value as value as body will store this value with this key.  If a 
+key value is already present, it will be overwritten.
+
+To retrieve a listing of all the keys in a database, perform a GET
+on the root of the database, e.g. http://server/shelve/
+
+To obtain a specific value, issue a GET request with the key in URI,
+ e.g. http://#{SERVER}/bucket/#{KEY}
+
+To delete a key value pair, simply issue a HTTP DELETE command to
+resource with the key in URI, e.g. http://#{SERVER}/bucket/#{KEY}
+
+The changes in the nodes of store propagates lazily. However, if you
+want to force propagation or want a canonical answer. You should direct
+your operations at canonicalbucket resource. 
+(e.g. http://#{SERVER}/canonicalbucket/#{KEY})
+"""
+
 import os
 import web
 import json
@@ -10,7 +37,7 @@ render_html = lambda message: '<html><body>%s</body></html>'%message
 render_txt = lambda message: message
 
 urls = (
-    '/lazybucket/(.*)', 'LazyBucketController',
+    '/bucket/(.*)', 'LazyBucketController',
     '/canonicalbucket/(.*)', 'CanonicalBucketController'
 )
 app = web.application(urls, globals())

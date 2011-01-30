@@ -3,7 +3,7 @@ from nose.tools import *
 from controller import app
 
 #TODO: fix this test controller
-lazy_controller = '/lazybucket/'
+lazy_controller = '/bucket/'
 canonical_controller = '/canonicalbucket/'
 
 class TestGET():
