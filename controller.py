@@ -10,7 +10,8 @@ render_html = lambda message: '<html><body>%s</body></html>'%message
 render_txt = lambda message: message
 
 urls = (
-    '/bucket/(.*)', 'BucketController'
+    '/lazybucket/(.*)', 'LazyBucketController',
+    '/canonicalbucket/(.*)', 'CanonicalBucketController'
 )
 app = web.application(urls, globals())
 
@@ -29,13 +30,20 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )
-    def GET(self, key):
+    def _GET(self, key, forceful=False):
         """Get the value if key is provided, otherwise return list of keys
         """
-        if len(key) <= 0:            
-            result = self.datastore.get_keys()                
+        if len(key) <= 0:
+            if forceful:           #TODO: Implement this
+                #result = self.datastore.get_keys()
+                pass
+            else:
+                result = self.datastore.get_keys()                                
         else:
-            result = self.datastore.get_value(str(key))
+            if forceful:
+                result = self.datastore.get_canonical_value(str(key))
+            else:
+                result = self.datastore.get_value(str(key))
         return {'message' : result}
 
     @mimerender(
@@ -45,8 +53,11 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )        
-    def PUT(self, key):
-        self.datastore.set_value(str(key), web.data())
+    def _PUT(self, key, forceful=False):
+        if forceful:
+            self.datastore.set_value_to_all(str(key), web.data())
+        else:
+            self.datastore.set_value(str(key), web.data())
         web.created()
         web.header('Location', '/bucket/{0}'.format(str(key)))
         return {'message' : str(key)}
@@ -58,9 +69,39 @@ class BucketController:
         json = render_json,
         txt  = render_txt
     )        
-    def DELETE(self, key):
-        self.datastore.delete(str(key))
+    def _DELETE(self, key, forceful=False):
+        if forceful:
+            self.datastore.delete_to_all(str(key))
+        else:
+            self.datastore.delete(str(key))
         return {'message' : 'deleted'}
+    
+class LazyBucketController(BucketController):
+    """Does not try to get precise read or propagate the writes
+    a read can be done on any node. can be slightly stale
+    a write to canonical node will propagated lazily
+    """
+    def GET(self, key):
+        return self._GET(key)
+    
+    def PUT(self, key):
+        return self._PUT(key)
+    
+    def DELETE(self, key):
+        return self._DELETE(key)
+        
+class CanonicalBucketController(BucketController):
+    """Every write is propagated to all nodes
+    Every read is read from canonical node
+    """
+    def GET(self, key):
+        return self._GET(key, forceful = True)
+    
+    def PUT(self, key):
+        return self._PUT(key, forceful = True)
+    
+    def DELETE(self, key):
+        return self._DELETE(key, forceful = True)    
         
 if (not is_test()) and __name__ == "__main__":   
     app.run()

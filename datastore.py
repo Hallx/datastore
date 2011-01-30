@@ -126,7 +126,19 @@ class DataStore:
 #                                            updated_at=web.SQLLiteral('NOW()'))            
         except:
             raise web.internalerror()
-        
+    
+    def set_value_to_all(self, key, value):
+        self.set_value(key, value)
+        uuid = self.get_unique_identifier(key)
+        try:
+            for database in self.databases:
+                database.delete(self.table_name, where='id = $key', vars=locals())
+                database.insert(self.table_name, id=key, value=value, uuid=uuid, update_flag= 1,
+                                            updated_at=web.SQLLiteral('NOW()'))
+        except:
+                raise web.internalerror()
+        return
+    
     def delete(self, key):
         self.check_key_length(key)
         uuid = self.get_unique_identifier(key)
@@ -139,3 +151,13 @@ class DataStore:
             return
         except:
             raise web.internalerror()
+
+    def delete_to_all(self, key):
+        self.delete(key)
+        try:
+            for database in self.databases:
+                database.update(self.table_name, where='id = $key', update_flag= 2, 
+                            updated_at=web.SQLLiteral('NOW()'), vars=locals())
+        except:
+                raise web.internalerror()
+        return

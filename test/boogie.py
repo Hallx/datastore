@@ -1,9 +1,8 @@
 import httplib2
 
 id = '4454'
-data = 'hello world'
-#database = 'shelve'
-database = 'bucket'
+data = 'hello worlddd'
+database = 'canonicalbucket'
 #database = 'memory'
 #action = 'POST'
 action = 'GET'
@@ -20,9 +19,9 @@ print resp
 print content
 
 "ALL KEYS"
-resp, content = h.request(url(''), action, data)
-print resp
-print content
+#resp, content = h.request(url(''), action, data)
+#print resp
+#print content
 
 "GET 555"
 resp, content = h.request(url(id), action, data)
