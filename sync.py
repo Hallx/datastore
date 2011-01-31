@@ -80,8 +80,8 @@ class SyncMysql:
                 keys, data = self.get_all_updated_data(cursor)
                 self.update_data_in_all(keys, data)
         except MySQLdb.Error, e:
-             print "Error %d: %s" % (e.args[0], e.args[1])
-             sys.exit (1)
+            print "Error %d: %s" % (e.args[0], e.args[1])
+            sys.exit (1)
 
     def cleanup(self):
         try:
@@ -90,8 +90,8 @@ class SyncMysql:
             for database in self.databases:
                 database.close()  
         except MySQLdb.Error, e:
-             print "Error %d: %s" % (e.args[0], e.args[1])
-             sys.exit (1)
+            print "Error %d: %s" % (e.args[0], e.args[1])
+            sys.exit (1)
 
 
 if __name__ == "__main__":

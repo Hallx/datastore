@@ -26,8 +26,15 @@ def retry_decorator(fn):
         return new_function
 
 class DataStore:
-    """DataStore handles the communication with nodes
+    """DataStore handles the communication with nodes.
     
+    UUID is calculated on key. The responsible (canonical) node is chosen based
+    on the UUID. It helps us distribute the data evenly between the nodes
+    
+    Key is a 32 bytes string in database. However, length of key can have a 
+    soft limit on it. Defined in configuration.cfg
+    
+    Value field has same size limits as mysql's long blob.
     
     Update flag has three values
         0: The data row is all synced
