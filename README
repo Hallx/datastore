@@ -39,12 +39,6 @@ SETUP:
 	$ ./controller.py
 
 
-TESTING:
-========
-
-Running the followig command on the base folder would execute all the test:
-	$ WEBPY_ENV=test nosetests
-
 STRUCTURE:
 ==========
 
@@ -58,8 +52,21 @@ STRUCTURE:
 	
 	sync.py is syncronization script which handles the lazy synchronization of key value pair across 
 	all the nodes. It is supposed to run lazily on a frequency of choosing.
+
 	
-	 
+TESTING:
+========
+
+	Running the followig command on the base folder would execute all the test:
+	$ WEBPY_ENV=test nosetests
+	
+	
+HOW TO USE:
+===========
+
+	The test folder contains test for two types of access. They are the best documentation on how to use the service.
+	Tests in the files GET and SET key value pairs. As well as UPDATE, DELETE them. You can also list all the
+	keys in the data store. All the successs and error codes are HTTP compliant.
 
 
 NOTES:
@@ -78,10 +85,6 @@ NOTES:
 	
 -	The front end is http webserver can also be scaled independant of the back end. However, sync.py should 
 	only have one instance to avoid race conditions.
-	
--	The test folder contains test for two types of access. They are best documentation on how to use the service.
-	Tests in the files GET and SET key value pairs. As well as UPDATE, DELETE them. You can also list all the
-	keys in the data store. All the successs and error codes are HTTP compliant.
 	
 -	TEST mode requires all the database nodes to have 'test_' in the start of their name. So it is 
 	imperative that we have a database with name 'test_' available on the same configuration. This is important to
