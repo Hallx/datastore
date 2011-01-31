@@ -3,7 +3,7 @@
 
 """A distributed RESTful key value store.
 
-All operations occur with the HTTP primitives (GET, POST, PUT, DELETE).
+All operations occur with the HTTP primitives (GET, POST, DELETE).
 
 Values can be uploaded either via POST. POST requires a key and data.
 For example, sending a POST to URI (http://#{SERVER}/bucket/#{KEY}) with a 
