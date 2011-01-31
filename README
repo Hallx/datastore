@@ -39,6 +39,12 @@ SETUP:
 	$ ./controller.py
 
 
+TESTING:
+========
+
+Running the followig command on the base folder would execute all the test:
+	$ WEBPY_ENV=test nosetests
+
 STRUCTURE:
 ==========
 
